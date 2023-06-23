@@ -82,9 +82,9 @@ def plot_multiclass_precision_recall(
     ).values
 
     # For each class
-    precision = dict()
-    recall = dict()
-    average_precision = dict()
+    precision = {}
+    recall = {}
+    average_precision = {}
     for i in range(n_classes):
         precision[i], recall[i], _ = precision_recall_curve(y_true[:, i], y_score[:, i])
         average_precision[i] = average_precision_score(y_true[:, i], y_score[:, i])
@@ -104,22 +104,20 @@ def plot_multiclass_precision_recall(
     # setup plot details
     plt.figure(figsize=(9, 10))
     f_scores = np.linspace(0.2, 0.8, num=4)
-    lines = []
-    labels = []
     for f_score in f_scores:
         x = np.linspace(0.01, 1)
         y = f_score * x / (2 * x - f_score)
         (l,) = plt.plot(x[y >= 0], y[y >= 0], color="gray", alpha=0.2)
         plt.annotate("f1={0:0.1f}".format(f_score), xy=(0.9, y[45] + 0.02))
 
-    lines.append(l)
-    labels.append("iso-f1 curves")
+    lines = [l]
     (l,) = plt.plot(recall_micro, precision_micro, color="gold", lw=2)
     lines.append(l)
-    labels.append(
-        "average Precision-recall (auprc = {0:0.2f})" "".format(average_precision_micro)
-    )
-
+    labels = [
+        "iso-f1 curves",
+        "average Precision-recall (auprc = {0:0.2f})"
+        "".format(average_precision_micro),
+    ]
     for i in range(n_classes):
         (l,) = plt.plot(recall[i], precision[i], lw=2)
         lines.append(l)
@@ -150,11 +148,10 @@ def distances_from_embeddings(
         "L2": spatial.distance.euclidean,
         "Linf": spatial.distance.chebyshev,
     }
-    distances = [
+    return [
         distance_metrics[distance_metric](query_embedding, embedding)
         for embedding in embeddings
     ]
-    return distances
 
 
 def indices_of_nearest_neighbors_from_distances(distances) -> np.ndarray:
@@ -206,7 +203,7 @@ def chart_from_components(
             else empty_list,
         }
     )
-    chart = px.scatter(
+    return px.scatter(
         data,
         x=x_title,
         y=y_title,
@@ -215,7 +212,6 @@ def chart_from_components(
         hover_data=["string"] if strings else None,
         **kwargs,
     ).update_traces(marker=dict(size=mark_size))
-    return chart
 
 
 def chart_from_components_3D(
@@ -241,7 +237,7 @@ def chart_from_components_3D(
             else empty_list,
         }
     )
-    chart = px.scatter_3d(
+    return px.scatter_3d(
         data,
         x=x_title,
         y=y_title,
@@ -251,4 +247,3 @@ def chart_from_components_3D(
         hover_data=["string"] if strings else None,
         **kwargs,
     ).update_traces(marker=dict(size=mark_size))
-    return chart

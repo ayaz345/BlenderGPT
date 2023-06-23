@@ -83,7 +83,7 @@ class TooManySymbolOrPunctuationPlugin(MessDetectorPlugin):
             if is_punctuation(character):
                 self._punctuation_count += 1
             elif (
-                character.isdigit() is False
+                not character.isdigit()
                 and is_symbol(character)
                 and is_emoticon(character) is False
             ):
@@ -313,7 +313,7 @@ class SuperWeirdWordPlugin(MessDetectorPlugin):
             self._buffer_accent_count = 0
         elif (
             character not in {"<", ">", "-", "=", "~", "|", "_"}
-            and character.isdigit() is False
+            and not character.isdigit()
             and is_symbol(character)
         ):
             self._is_current_word_bad = True
@@ -392,7 +392,7 @@ class ArchaicUpperLowerPlugin(MessDetectorPlugin):
         if chunk_sep and self._character_count_since_last_sep > 0:
             if (
                 self._character_count_since_last_sep <= 64
-                and character.isdigit() is False
+                and not character.isdigit()
                 and self._current_ascii_only is False
             ):
                 self._successive_upper_lower_count_final += (

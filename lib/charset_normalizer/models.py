@@ -36,9 +36,7 @@ class CharsetMatch:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, CharsetMatch):
             raise TypeError(
-                "__eq__ cannot be invoked on {} and {}.".format(
-                    str(other.__class__), str(self.__class__)
-                )
+                f"__eq__ cannot be invoked on {str(other.__class__)} and {str(self.__class__)}."
             )
         return self.encoding == other.encoding and self.fingerprint == other.fingerprint
 
@@ -72,14 +70,12 @@ class CharsetMatch:
         return self._string
 
     def __repr__(self) -> str:
-        return "<CharsetMatch '{}' bytes({})>".format(self.encoding, self.fingerprint)
+        return f"<CharsetMatch '{self.encoding}' bytes({self.fingerprint})>"
 
     def add_submatch(self, other: "CharsetMatch") -> None:
         if not isinstance(other, CharsetMatch) or other == self:
             raise ValueError(
-                "Unable to add instance <{}> as a submatch of a CharsetMatch".format(
-                    other.__class__
-                )
+                f"Unable to add instance <{other.__class__}> as a submatch of a CharsetMatch"
             )
 
         other._string = None  # Unload RAM usage; dirty trick.
@@ -152,9 +148,7 @@ class CharsetMatch:
 
     @property
     def coherence(self) -> float:
-        if not self._languages:
-            return 0.0
-        return self._languages[0][1]
+        return 0.0 if not self._languages else self._languages[0][1]
 
     @property
     def percent_chaos(self) -> float:
@@ -258,9 +252,7 @@ class CharsetMatches:
         """
         if not isinstance(item, CharsetMatch):
             raise ValueError(
-                "Cannot append instance '{}' to CharsetMatches".format(
-                    str(item.__class__)
-                )
+                f"Cannot append instance '{str(item.__class__)}' to CharsetMatches"
             )
         # We should disable the submatch factoring when the input file is too heavy (conserve RAM usage)
         if len(item.raw) <= TOO_BIG_SEQUENCE:
@@ -275,9 +267,7 @@ class CharsetMatches:
         """
         Simply return the first match. Strict equivalent to matches[0].
         """
-        if not self._results:
-            return None
-        return self._results[0]
+        return None if not self._results else self._results[0]
 
     def first(self) -> Optional["CharsetMatch"]:
         """

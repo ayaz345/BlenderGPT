@@ -152,7 +152,7 @@ class BasicAuth(namedtuple("BasicAuth", ["login", "password", "encoding"])):
             raise ValueError("Could not parse authorization header.")
 
         if auth_type.lower() != "basic":
-            raise ValueError("Unknown authorization method %s" % auth_type)
+            raise ValueError(f"Unknown authorization method {auth_type}")
 
         try:
             decoded = base64.b64decode(
@@ -184,15 +184,12 @@ class BasicAuth(namedtuple("BasicAuth", ["login", "password", "encoding"])):
     def encode(self) -> str:
         """Encode credentials."""
         creds = (f"{self.login}:{self.password}").encode(self.encoding)
-        return "Basic %s" % base64.b64encode(creds).decode(self.encoding)
+        return f"Basic {base64.b64encode(creds).decode(self.encoding)}"
 
 
 def strip_auth_from_url(url: URL) -> Tuple[URL, Optional[BasicAuth]]:
     auth = BasicAuth.from_url(url)
-    if auth is None:
-        return url, None
-    else:
-        return url.with_user(None), auth
+    return (url, None) if auth is None else (url.with_user(None), auth)
 
 
 def netrc_from_env() -> Optional[netrc.netrc]:
@@ -301,10 +298,7 @@ def get_running_loop(
 
 def isasyncgenfunction(obj: Any) -> bool:
     func = getattr(inspect, "isasyncgenfunction", None)
-    if func is not None:
-        return func(obj)  # type: ignore[no-any-return]
-    else:
-        return False
+    return func(obj) if func is not None else False
 
 
 def get_env_proxy_for_url(url: URL) -> Tuple[URL, Optional[BasicAuth]]:
@@ -435,7 +429,7 @@ def content_disposition_header(
             if quote_fields:
                 if key.lower() == "filename":
                     qval = quote(val, "", encoding=_charset)
-                    lparams.append((key, '"%s"' % qval))
+                    lparams.append((key, f'"{qval}"'))
                 else:
                     try:
                         qval = quoted_string(val)
@@ -443,12 +437,12 @@ def content_disposition_header(
                         qval = "".join(
                             (_charset, "''", quote(val, "", encoding=_charset))
                         )
-                        lparams.append((key + "*", qval))
+                        lparams.append((f"{key}*", qval))
                     else:
-                        lparams.append((key, '"%s"' % qval))
+                        lparams.append((key, f'"{qval}"'))
             else:
                 qval = val.replace("\\", "\\\\").replace('"', '\\"')
-                lparams.append((key, '"%s"' % qval))
+                lparams.append((key, f'"{qval}"'))
         sparams = "; ".join("=".join(pair) for pair in lparams)
         value = "; ".join((value, sparams))
     return value
@@ -492,14 +486,11 @@ class reify(Generic[_T]):
 
 reify_py = reify
 
-try:
+with suppress(ImportError):
     from ._helpers import reify as reify_c
 
     if not NO_EXTENSIONS:
         reify = reify_c  # type: ignore[misc,assignment]
-except ImportError:
-    pass
-
 _ipv4_pattern = (
     r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
     r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
@@ -645,13 +636,12 @@ class TimeoutHandle:
 
     def start(self) -> Optional[asyncio.Handle]:
         timeout = self._timeout
-        if timeout is not None and timeout > 0:
-            when = self._loop.time() + timeout
-            if timeout >= 5:
-                when = ceil(when)
-            return self._loop.call_at(when, self.__call__)
-        else:
+        if timeout is None or timeout <= 0:
             return None
+        when = self._loop.time() + timeout
+        if timeout >= 5:
+            when = ceil(when)
+        return self._loop.call_at(when, self.__call__)
 
     def timer(self) -> "BaseTimerContext":
         if self._timeout is not None and self._timeout > 0:
@@ -756,7 +746,7 @@ class HeadersMixin:
             self._content_type = "application/octet-stream"
             self._content_dict = {}
         else:
-            msg = HeaderParser().parsestr("Content-Type: " + raw)
+            msg = HeaderParser().parsestr(f"Content-Type: {raw}")
             self._content_type = msg.get_content_type()
             params = msg.get_params()
             self._content_dict = dict(params[1:])  # First element is content type again
@@ -784,10 +774,7 @@ class HeadersMixin:
             hdrs.CONTENT_LENGTH
         )
 
-        if content_length is not None:
-            return int(content_length)
-        else:
-            return None
+        return int(content_length) if content_length is not None else None
 
 
 def set_result(fut: "asyncio.Future[_T]", result: _T) -> None:
@@ -808,16 +795,13 @@ class ChainMapProxy(Mapping[str, Any]):
 
     def __init_subclass__(cls) -> None:
         raise TypeError(
-            "Inheritance class {} from ChainMapProxy "
-            "is forbidden".format(cls.__name__)
+            f"Inheritance class {cls.__name__} from ChainMapProxy is forbidden"
         )
 
     def __getitem__(self, key: str) -> Any:
         for mapping in self._maps:
-            try:
+            with suppress(KeyError):
                 return mapping[key]
-            except KeyError:
-                pass
         raise KeyError(key)
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -831,7 +815,7 @@ class ChainMapProxy(Mapping[str, Any]):
         d: Dict[str, Any] = {}
         for mapping in reversed(self._maps):
             # reuses stored hash values if possible
-            d.update(mapping)
+            d |= mapping
         return iter(d)
 
     def __contains__(self, key: object) -> bool:

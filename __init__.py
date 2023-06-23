@@ -84,15 +84,13 @@ class GPT4_OT_ShowCode(bpy.types.Operator):
         text.clear()
         text.write(self.code)
 
-        text_editor_area = None
-        for area in context.screen.areas:
-            if area.type == 'TEXT_EDITOR':
-                text_editor_area = area
-                break
-
+        text_editor_area = next(
+            (area for area in context.screen.areas if area.type == 'TEXT_EDITOR'),
+            None,
+        )
         if text_editor_area is None:
             text_editor_area = split_area_to_text_editor(context)
-        
+
         text_editor_area.spaces.active.text = text
 
         return {'FINISHED'}
@@ -111,21 +109,17 @@ class GPT4_PT_Panel(bpy.types.Panel):
         column.label(text="Chat history:")
         box = column.box()
         for index, message in enumerate(context.scene.gpt4_chat_history):
+            row = box.row()
             if message.type == 'assistant':
-                row = box.row()
                 row.label(text="Assistant: ")
                 show_code_op = row.operator("gpt4.show_code", text="Show Code")
                 show_code_op.code = message.content
-                delete_message_op = row.operator("gpt4.delete_message", text="", icon="TRASH", emboss=False)
-                delete_message_op.message_index = index
             else:
-                row = box.row()
                 row.label(text=f"User: {message.content}")
-                delete_message_op = row.operator("gpt4.delete_message", text="", icon="TRASH", emboss=False)
-                delete_message_op.message_index = index
-
+            delete_message_op = row.operator("gpt4.delete_message", text="", icon="TRASH", emboss=False)
+            delete_message_op.message_index = index
         column.separator()
-        
+
         column.label(text="GPT Model:")
         column.prop(context.scene, "gpt4_model", text="")
 

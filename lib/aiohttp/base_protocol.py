@@ -45,7 +45,7 @@ class BaseProtocol(asyncio.Protocol):
         if not self._reading_paused and self.transport is not None:
             try:
                 self.transport.pause_reading()
-            except (AttributeError, NotImplementedError, RuntimeError):
+            except (AttributeError, RuntimeError):
                 pass
             self._reading_paused = True
 
@@ -53,7 +53,7 @@ class BaseProtocol(asyncio.Protocol):
         if self._reading_paused and self.transport is not None:
             try:
                 self.transport.resume_reading()
-            except (AttributeError, NotImplementedError, RuntimeError):
+            except (AttributeError, RuntimeError):
                 pass
             self._reading_paused = False
 

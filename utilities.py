@@ -45,7 +45,13 @@ def generate_blender_code(prompt, chat_history, context, system_prompt):
             messages.append({"role": message.type.lower(), "content": message.content})
 
     # Add the current user message
-    messages.append({"role": "user", "content": "Can you please write Blender code for me that accomplishes the following task: " + prompt + "? \n. Do not respond with anything that is not Python code. Do not provide explanations"})
+    messages.append(
+        {
+            "role": "user",
+            "content": f"Can you please write Blender code for me that accomplishes the following task: {prompt}"
+            + "? \n. Do not respond with anything that is not Python code. Do not provide explanations",
+        }
+    )
 
 
     response = openai.ChatCompletion.create(
@@ -72,7 +78,7 @@ def generate_blender_code(prompt, chat_history, context, system_prompt):
             print(completion_text, flush=True, end='\r')
         completion_text = re.findall(r'```(.*?)```', completion_text, re.DOTALL)[0]
         completion_text = re.sub(r'^python', '', completion_text, flags=re.MULTILINE)
-        
+
         return completion_text
     except IndexError:
         return None
